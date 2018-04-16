@@ -1,0 +1,99 @@
+#include<pthread.h>
+#include<unistd.h>
+#include<stdlib.h>
+#include<stdio.h>
+int maximum,minimum,length;
+float average;
+void *mincal(void *arg){
+    int * num = (int*)arg;
+
+    int a;
+    minimum=num[0];
+    for(a=1; a<length; a++)
+        if(num[a]<minimum)
+            minimum=num[a];
+
+    pthread_exit(NULL);
+}
+void *maxcal(void *arg){
+    int * num = (int*)arg;
+
+    int a;
+
+    for(a=0; a<length; a++)
+        if(num[a]>maximum)
+            maximum=num[a];
+
+    pthread_exit(NULL);
+}
+void *avgcal(void *arg){
+    int * num = (int*)arg;
+
+    int a,sum=0;
+
+    for(a=0; a<length; a++)
+        sum+=num[a];
+
+    average = (float)sum/(float)length;
+
+    pthread_exit(NULL);
+}
+
+
+int main(int argc, char **argv)
+{
+	
+    int a, *num;
+    if(argc>2){
+        printf("CLI args received.");
+        num = (int*)malloc((argc-1)*sizeof(int));
+        
+        for(a=1; a<argc; a++)
+            num[a-1] = atoi(argv[a]);
+
+        length = argc-1;
+    }else if(argc<2)
+	{
+       // puts("CLI args not received, Setting Compiletime arguments");
+        int arg[] = {25,56,89,45,74,23,92};
+        
+        length = sizeof(arg)/sizeof(arg[0]);
+
+        num = (int*)malloc(length*sizeof(int));
+        for(a=0; a<length; a++)
+            num[a] = arg[a];
+    }
+    
+    printf("Given Inputs : ");
+    for(a=1; a<length; a++)
+        printf("%d ",num[a]);
+
+    pthread_t average_thread, maximum_thread, minimum_thread;
+
+    
+    if(pthread_create(&average_thread,NULL,avgcal,(void *)num))
+    
+        return -1*printf("Error in thread creation!!!\n");///return a negative integer;
+    
+    pthread_join(average_thread,NULL);
+
+    printf("\nAVGERAGE : %.2f\n", average);
+
+
+
+    if(pthread_create(&maximum_thread,NULL,maxcal,(void *)num))
+        return -1*printf("Error in thread creation!!!\n");///return a negative integer;
+    pthread_join(maximum_thread,NULL);
+
+    printf("\nMAXIMUM : %d\n", maximum);
+
+
+    if(pthread_create(&minimum_thread,NULL,mincal,(void *)num))
+        return -1*printf("Error in thread creation!!!\n");///return a negative integer
+    
+    pthread_join(minimum_thread,NULL);
+
+    printf("\nMINIMUM : %d\n", minimum);
+
+    return 0*printf("\nSUCCESSFUL EXIT\n");
+}
